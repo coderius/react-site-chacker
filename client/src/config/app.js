@@ -1,0 +1,1 @@
+export const SOCKET_SERVER_ENDPOINT = "ws://localhost:8999/";
