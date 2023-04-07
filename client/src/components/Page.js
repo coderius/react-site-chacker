@@ -14,14 +14,17 @@ class Page extends Component {
     constructor(props) {
         super(props);
 
-        this.hendlerClickCheck = this.hendlerClickCheck.bind(this);
+        this.handleSubmitCheck = this.handleSubmitCheck.bind(this);
 
         this.inputRef = React.createRef();
 
         this.state = {
+            wasValidated: false,//была ли сделена валидация
+            formValid: false,//валтдна ли форма
+            // validatedMessages: [],
             appId: "",
             checkUrl: "",
-            urls: [],
+            websocketUrls: [],
         };
     }
 
@@ -41,11 +44,42 @@ class Page extends Component {
         // console.log(this.state.checkUrl);
     }
 
+    checkValidityForm(form) {
+        this.setState({
+            wasValidated: true,
+        });
+        
+        if (form.checkValidity() === false) {
+            this.setState({
+                formValid: false,
+            });
+            return false;
+            
+        }else{
+            this.setState({
+                formValid: true,
+            });
+            this.setState({
+                wasValidated: false,
+            });
+            return true;
+        }
+        
+    }
 
     //Start 
-    hendlerClickCheck(e) {
+    handleSubmitCheck(e) {
         e.preventDefault();
+        e.stopPropagation();
+        const form = e.currentTarget;
+        let isVal = this.checkValidityForm(form);
+        if (isVal === false) {
+            console.log("this.state.formValid === false",this.state.formValid);
+            return;
+        }
+        
         this.setCheckUrl();
+        // console.log("fds", this.state.checkUrl);
 
         this.ws = new WebSocket(SOCKET_SERVER_ENDPOINT);
 
@@ -72,6 +106,11 @@ class Page extends Component {
 
     render() {
 
+        // let validatedMessageBlock;
+        // if (this.state.validated === false) {
+        //     validatedMessageBlock = <div>{this.state.validatedMessages.map((m) => m)}</div>;
+        // }
+
         return (
 
             <Container fluid>
@@ -87,12 +126,24 @@ class Page extends Component {
 
                 <Row>
                     <Col>
-                        <Form>
-                            <Form.Group className="mb-3" controlId="formBasicEmail">
+                        <Form noValidate  validated={this.state.wasValidated} onSubmit={this.handleSubmitCheck}>
+                            <Form.Group className="mb-3" controlId="checkUrl">
                                 <Form.Label>Url website</Form.Label>
-                                <Form.Control ref={this.inputRef} type="text" placeholder="Enter url here ..." />
+                                <Form.Control
+                                    ref={this.inputRef}
+                                    type="url"
+                                    placeholder="Enter url here ..."
+                                    required
+                                />
+                                {/* {validatedMessageBlock} */}
+                                <Form.Control.Feedback type="invalid">
+                                    Please provide a valid url.
+                                </Form.Control.Feedback>
+                                <Form.Control.Feedback type="valid">
+                                    Ok.
+                                </Form.Control.Feedback>
                             </Form.Group>
-                            <Button onClick={this.hendlerClickCheck} variant="primary" type="submit">
+                            <Button variant="primary" type="submit">
                                 Check
                             </Button>
                         </Form>
