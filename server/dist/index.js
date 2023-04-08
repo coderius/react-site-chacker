@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
+const { Spider } = require('get-all-links');
 const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 8999;
@@ -10,11 +11,16 @@ const port = process.env.PORT || 8999;
 const wss = new WebSocket.Server({ server });
 const dispatchEvent = (message, ws) => {
     // wss.clients.forEach(client => client.send(message));
+    const func = (client, json) => {
+        let timerId = setInterval(() => {
+            client.send(json.payload.checkUrl);
+        }, 1000);
+    };
     //{ event: "check-url", payload: { appId, checkUrl }
     const json = JSON.parse(message);
     switch (json.event) {
         case "check-url":
-            wss.clients.forEach(client => client.send(json.payload.appId));
+            wss.clients.forEach(client => func(client, json));
             break;
         default: ws.send((new Error("Wrong query")).message);
     }
@@ -24,7 +30,7 @@ wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         //log the received message and send it back to the client
         // console.log('received: %s', message);
-        ws.send(`Hello, you sent -> ${message}`);
+        // ws.send(`Hello, you sent -> ${message}`);
         dispatchEvent(message, ws);
         ws.on("error", (e) => ws.send(e));
     });

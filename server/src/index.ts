@@ -1,10 +1,13 @@
 import * as express from 'express';
 import * as http from 'http';
 import * as WebSocket from 'ws';
+const {Spider} = require('get-all-links');
+
 
 const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 8999;
+
 
 //initialize the WebSocket server instance
 const wss = new WebSocket.Server({ server });
@@ -12,15 +15,22 @@ const wss = new WebSocket.Server({ server });
 const dispatchEvent = (message: string, ws: WebSocket) => {
     // wss.clients.forEach(client => client.send(message));
     
-
+    const func = (client: WebSocket, json: any) => {
+        let timerId = setInterval(() => {
+            client.send(json.payload.checkUrl);
+        }, 1000);
+    }
+    
     //{ event: "check-url", payload: { appId, checkUrl }
     const json = JSON.parse(message);
     switch (json.event) {
-        case "check-url": wss.clients.forEach(client => client.send(json.payload.appId));
+        case "check-url": 
+            wss.clients.forEach(client => func(client, json));
         break;
         default: ws.send((new Error("Wrong query")).message);
     }
 }
+
 
 
 wss.on('connection', (ws: WebSocket) => {
@@ -30,7 +40,7 @@ wss.on('connection', (ws: WebSocket) => {
 
         //log the received message and send it back to the client
         // console.log('received: %s', message);
-        ws.send(`Hello, you sent -> ${message}`);
+        // ws.send(`Hello, you sent -> ${message}`);
 
         dispatchEvent(message, ws);
 

@@ -8,6 +8,7 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Breadcrumb from 'react-bootstrap/Breadcrumb';
 import Table from 'react-bootstrap/Table';
+import * as cheerio from 'cheerio';
 
 class Page extends Component {
 
@@ -40,7 +41,8 @@ class Page extends Component {
         this.setState({
             checkUrl: input.value
         });
-        input.value = null;
+        // input.value = null;
+        return input.value;
         // console.log(this.state.checkUrl);
     }
 
@@ -48,14 +50,14 @@ class Page extends Component {
         this.setState({
             wasValidated: true,
         });
-        
+
         if (form.checkValidity() === false) {
             this.setState({
                 formValid: false,
             });
             return false;
-            
-        }else{
+
+        } else {
             this.setState({
                 formValid: true,
             });
@@ -64,7 +66,30 @@ class Page extends Component {
             });
             return true;
         }
-        
+
+    }
+
+    getLinks(url) {
+        fetch(url)
+            .then(function (response) {
+                return response.text();
+            })
+            .then(function (html) {
+                // Load the HTML in Cheerio
+                const $ = cheerio.load(html);
+
+                // Select all anchor tags from the page
+                const links = $("a")
+
+                // Loop over all the anchor tags
+                links.each((index, value) => {
+                    // Print the text from the tags and the associated href
+                    console.log($(value).text(), " => ", $(value).attr("href"));
+                })
+            })
+            .catch(function (err) {
+                console.log('Failed to fetch page: ', err);
+            });
     }
 
     //Start 
@@ -74,16 +99,20 @@ class Page extends Component {
         const form = e.currentTarget;
         let isVal = this.checkValidityForm(form);
         if (isVal === false) {
-            console.log("this.state.formValid === false",this.state.formValid);
+            console.log("this.state.formValid === false", this.state.formValid);
             return;
         }
-        
+
         this.setCheckUrl();
         // console.log("fds", this.state.checkUrl);
 
         this.ws = new WebSocket(SOCKET_SERVER_ENDPOINT);
 
-        const checkUrl = this.state.checkUrl;
+        // const checkUrl = this.state.checkUrl;
+        const checkUrl = this.setCheckUrl();
+
+
+        console.log("checkUrl", this.setCheckUrl());
         const appId = this.state.appId;
         this.ws.onopen = () => {
             this.ws.send(JSON.stringify({ event: "check-url", payload: { appId, checkUrl } }));
@@ -126,7 +155,7 @@ class Page extends Component {
 
                 <Row>
                     <Col>
-                        <Form noValidate  validated={this.state.wasValidated} onSubmit={this.handleSubmitCheck}>
+                        <Form noValidate validated={this.state.wasValidated} onSubmit={this.handleSubmitCheck}>
                             <Form.Group className="mb-3" controlId="checkUrl">
                                 <Form.Label>Url website</Form.Label>
                                 <Form.Control
