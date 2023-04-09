@@ -1,31 +1,30 @@
-import * as express from 'express';
+import express from 'express';
 import * as http from 'http';
-import * as WebSocket from 'ws';
-const {Spider} = require('get-all-links');
-
+import {WebSocket, WebSocketServer} from 'ws';
+import {Crawler} from './crawler.js';
 
 const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 8999;
 
-
 //initialize the WebSocket server instance
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocketServer({ server });
 
-const dispatchEvent = (message: string, ws: WebSocket) => {
-    // wss.clients.forEach(client => client.send(message));
-    
-    const func = (client: WebSocket, json: any) => {
-        let timerId = setInterval(() => {
-            client.send(json.payload.checkUrl);
-        }, 1000);
-    }
-    
-    //{ event: "check-url", payload: { appId, checkUrl }
+const dispatchEvent = (message, ws) => {
     const json = JSON.parse(message);
+
+    //{ event: "check-url", payload: { appId, checkUrl }
     switch (json.event) {
         case "check-url": 
-            wss.clients.forEach(client => func(client, json));
+            wss.clients.forEach(client => {
+                new Crawler(json.payload.checkUrl)
+                .find()
+                .then(
+                    links => {
+                        client.send(JSON.stringify(links));
+                    }
+                );
+            });
         break;
         default: ws.send((new Error("Wrong query")).message);
     }
@@ -33,10 +32,10 @@ const dispatchEvent = (message: string, ws: WebSocket) => {
 
 
 
-wss.on('connection', (ws: WebSocket) => {
+wss.on('connection', (ws) => {
 
     //connection is up, let's add a simple simple event
-    ws.on('message', (message: string) => {
+    ws.on('message', (message) => {
 
         //log the received message and send it back to the client
         // console.log('received: %s', message);
@@ -44,7 +43,7 @@ wss.on('connection', (ws: WebSocket) => {
 
         dispatchEvent(message, ws);
 
-        ws.on("error", (e: string) => ws.send(e));
+        ws.on("error", (e) => ws.send(e));
     });
 
     //send immediatly a feedback to the incoming connection

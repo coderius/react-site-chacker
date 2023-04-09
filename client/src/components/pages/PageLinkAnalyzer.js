@@ -1,6 +1,6 @@
 // Main page
 import React, { Component } from 'react';
-import { SOCKET_SERVER_ENDPOINT } from '../config/app';
+import { SOCKET_SERVER_ENDPOINT } from '../../config/app';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -10,7 +10,7 @@ import Breadcrumb from 'react-bootstrap/Breadcrumb';
 import Table from 'react-bootstrap/Table';
 import * as cheerio from 'cheerio';
 
-class Page extends Component {
+class PageLinkAnalyzer extends Component {
 
     constructor(props) {
         super(props);
@@ -146,12 +146,6 @@ class Page extends Component {
         return (
 
             <Container fluid>
-                <Breadcrumb>
-                    <Breadcrumb.Item href="#">Home</Breadcrumb.Item>
-                    <Breadcrumb.Item active>Check url</Breadcrumb.Item>
-                </Breadcrumb>
-
-
                 <Row>
                     <Col><h1>Check website links</h1></Col>
                 </Row>
@@ -221,4 +215,4 @@ class Page extends Component {
 }
 
 
-export default Page;
+export default PageLinkAnalyzer;
