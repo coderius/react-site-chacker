@@ -1,6 +1,8 @@
 import {
   SET_URL,
   SET_URL_STARTED,
+  SET_URL_SUCCESS,
+  SET_URL_FAILURE,
   SERVER_ERROR,
   // SET_BASE_URL,
   SET_CHECK_URL,
@@ -65,22 +67,66 @@ import {
 //   }
 // });
 
-export const setUrl = (params) => {
+export const pushUrl = (params) => {
+  return (dispatch, getState) => {
+    let promise = new Promise(function (resolve, reject) {
+      dispatch(setUrlStarted());
+      dispatch(setUrl(params));
+      // setTimeout(() => resolve(), 5000);
+      // console.log(params);
+      resolve();
+      reject("some error with setting url");
+    });
 
-  setUrlStarted();
-
-  return {
-    type: SET_URL,
-    payload: params
-  };
+    promise.then(() => {
+        // console.log(params);
+        dispatch(setUrlSuccess());
+      })
+      .catch(err => {
+        dispatch(setUrlFailure(err));
+      });
+  }
 }
+
+const setUrlStarted = () => ({
+  type: SET_URL_STARTED,
+  payload: {
+    statusSetUrl: {
+      event: 'onSetUrlStarted',
+      message: 'start setting url...',
+    }
+  }
+});
+
+const setUrl = (params) => ({
+  type: SET_URL,
+  payload: {
+    params: params
+  }
+});
+
+const setUrlSuccess = () => ({
+  type: SET_URL_SUCCESS,
+  payload: {
+    statusSetUrl: {
+      event: 'onSetUrlSuccess',
+      message: 'success setting url...',
+    },
+  }
+});
+
+const setUrlFailure = (error) => ({
+  type: SET_URL_FAILURE,
+  payload: {
+    statusSetUrl: {
+      event: 'onSetUrlFailure',
+      message: 'fail setting url...',
+    }
+  }
+});
 
 export const clearUrls = () => ({
   type: CLEAR_URLS
-});
-
-const setUrlStarted = () => ({
-  type: SET_URL_STARTED
 });
 
 export const serverError = error => ({
@@ -102,20 +148,19 @@ const urlsCount = (count) => ({
 });
 
 export const endPopulateUrls = () => {
-
+// console.log("vfdv");
   return (dispatch, getState) => {
-    new Promise(function (myResolve, myReject) {
-      const u = () => ({
+    new Promise(function (resolve, reject) {
+      dispatch({
         type: END_POPULATE_URLS
       });
-      dispatch(u());
       const state = getState();
-      myResolve(state);
+      resolve(state);
     })
-    .then(state => {
-      const urls = state.urlReducer.urls;
-      dispatch(urlsCount(urls.length));
-    });
+      .then(state => {
+        const urls = state.urlReducer.urls;
+        dispatch(urlsCount(urls.length));
+      });
   }
 };
 

@@ -13,7 +13,7 @@ import { connect } from 'react-redux';
 import {
     setCheckUrl,
     // setBaseUrl, 
-    setUrl,
+    pushUrl,
     serverError,
     clearUrls,
     startPopulateUrls,
@@ -24,7 +24,9 @@ import Alert from 'react-bootstrap/Alert';
 import {
     POPULATE_URLS_STARTING,
     POPULATE_URLS_ENDING
-  } from '../../store/actions/events';
+} from '../../store/actions/events';
+
+import Spinner from 'react-bootstrap/Spinner';
 
 class PageLinkAnalyzer extends Component {
 
@@ -46,6 +48,7 @@ class PageLinkAnalyzer extends Component {
     }
 
     componentDidMount() {
+        this.props.clearUrls();
         this.setState({
             appId: (Math.random() + 1).toString(36).substring(7),
         });
@@ -60,7 +63,7 @@ class PageLinkAnalyzer extends Component {
         // var protocol = pathArray[0];
         // var host = pathArray[2];
         // var baseUrl = protocol + '//' + host;
-
+        this.props.clearUrls();
         this.props.setCheckUrlAction(url);
         // this.props.setBaseUrlAction(baseUrl);//redux
         // input.value = null;
@@ -128,15 +131,42 @@ class PageLinkAnalyzer extends Component {
                 console.log(error);
             } else {
                 const map = new Map(Object.entries(links));
-                this.props.clearUrls();
                 this.props.startPopulateUrls();
-                map.forEach((value, key, map) => {
-                    let params = {
-                        href: value.href
-                    };
-                    this.props.setUrl(params);
-                });
-                this.props.endPopulateUrls();
+
+                const mp = (map, props) => {
+                    new Promise(function (resolve, reject) {
+                        map.forEach((value, key, map) => {
+                            let params = {
+                                href: value.href
+                            };
+                            props.pushUrl(params);
+                        });
+                        // resolve();
+                        return setTimeout(resolve, 2000);
+                    })
+                        .then(() => {
+                            props.endPopulateUrls();
+                        });
+                }
+
+                mp(map, this.props);
+
+
+
+                // map.forEach((value, key, map) => {
+                //     let params = {
+                //         href: value.href
+                //     };
+                //     this.props.pushUrl(params);
+                // });
+                // this.props.endPopulateUrls();
+                // map.forEach((value, key, map) => {
+                //     let params = {
+                //         href: value.href
+                //     };
+                //     this.props.pushUrl(params);
+                // });
+                // this.props.endPopulateUrls();
 
                 // this.props.setUrls(Array.from(links));
                 // console.log(Array.from(links));
@@ -162,7 +192,7 @@ class PageLinkAnalyzer extends Component {
     }
 
     render() {
-        // console.log(this.props.onPopulateUrlsStarted ,this.props.onPopulateUrlsEnded);
+        console.log(this.props.loading);
         // this.props.urlReduxState.urls.map((currentValue, index, arr) => ( console.log(currentValue) ));
         return (
 
@@ -191,7 +221,20 @@ class PageLinkAnalyzer extends Component {
                                 </Form.Control.Feedback>
                             </Form.Group>
                             <Button variant="primary" type="submit">
-                                Check
+                                {
+                                    this.props.loading ?
+                                        <><Spinner
+                                            as="span"
+                                            animation="grow"
+                                            size="sm"
+                                            role="status"
+                                            aria-hidden="true"
+                                        />
+                                            <span> Loading...</span></>
+                                        :
+                                        <span> Check</span>
+                                }
+
                             </Button>
                         </Form>
                     </Col>
@@ -199,6 +242,11 @@ class PageLinkAnalyzer extends Component {
                 <hr></hr>
                 <Row>
                     <Col>
+                        {this.props.loading ?
+                            <Spinner variant="success" animation="border" role="status"  style={{ width: "4rem", height: "4rem" }} className="position-absolute top-50 start-50">
+                                <span className="visually-hidden">Loading...</span>
+                            </Spinner>
+                            : ""}
                         {
                             this.props.urlReduxState.serverError === null
                                 ?
@@ -221,9 +269,9 @@ class PageLinkAnalyzer extends Component {
                                                         <td>status</td>
                                                     </tr>
                                                 ))}
-
                                             </tbody>
                                         </Table>
+
                                     </>
                                     : this.props.onPopulateUrlsEnded ?
                                         <Alert variant='info'>
@@ -252,13 +300,14 @@ const mapStateToProps = state => {
         countUrls: state.urlReducer.urlsCount,
         onPopulateUrlsStarted: state.urlReducer.onPopulateUrls === POPULATE_URLS_STARTING,
         onPopulateUrlsEnded: state.urlReducer.onPopulateUrls === POPULATE_URLS_ENDING,
+        loading: state.urlReducer.loading,
     };
 }
 
 const mapDispatchToProps = dispatch => {
     return {
-        setUrl: url => {
-            dispatch(setUrl(url));
+        pushUrl: url => {
+            dispatch(pushUrl(url));
         },
         serverError: e => {
             dispatch(serverError(e));

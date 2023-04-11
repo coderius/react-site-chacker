@@ -1,6 +1,8 @@
 import {
     SET_URL,
     SET_URL_STARTED,
+    SET_URL_SUCCESS,
+    SET_URL_FAILURE,
     SERVER_ERROR,
     // SET_BASE_URL,
     SET_CHECK_URL,
@@ -15,45 +17,72 @@ import {
     POPULATE_URLS_ENDING
   } from '../actions/events';
 
+  const defaultState = {
+    loading: false,
+    onPopulateUrls: false,
+    statusSetUrl: [],
+    urls: [],
+    urlsCount: 0,
+    serverError: null,
+    checkUrl: "",//this url pasted to input
+};
+
   const initialState = {
     loading: false,
     onPopulateUrls: false,
+    statusSetUrl: [],
     urls: [],
     urlsCount: 0,
     serverError: null,
     // baseUrl: "",//this url is used if isset relative links for ajax
     checkUrl: "",//this url pasted to input
-    
 };
 
 export default function urlReducer(state = initialState, action) {
     switch (action.type) {
         case SET_URL_STARTED:
+            console.log(SET_URL_STARTED);
             return {
                 ...state,
-                loading: true
+                statusSetUrl: [...state.statusSetUrl, action.payload.statusSetUrl],
+                // loading: true
             };
+        case SET_URL:
+            console.log(SET_URL, state.loading);
+            return {
+                ...state,
+                urls: [...state.urls, action.payload.params]
+            };    
+        case SET_URL_SUCCESS:
+            console.log(SET_URL_SUCCESS);
+            return {
+                ...state,
+                // loading: false,
+                statusSetUrl: [...state.statusSetUrl, action.payload.statusSetUrl],
+            };
+        case SET_URL_FAILURE:
+            console.log(SET_URL_FAILURE);
+            return {
+                ...state,
+                // loading: false,
+                statusSetUrl: [...state.statusSetUrl, action.payload.statusSetUrl],
+            };    
         case START_POPULATE_URLS:
             console.log(POPULATE_URLS_STARTING);
             return {
                 ...state,
+                loading: true,
                 onPopulateUrls: POPULATE_URLS_STARTING
             }; 
         case END_POPULATE_URLS:
             console.log(POPULATE_URLS_ENDING);
             return {
                 ...state,
+                loading: false,
                 onPopulateUrls: POPULATE_URLS_ENDING
             };       
-        case SET_URL:
-            // console.log(action.payload);
-            return {
-                ...state,
-                loading: false,
-                serverError: null,
-                urls: [...state.urls, action.payload]
-            };
         case SERVER_ERROR:
+            console.log(SERVER_ERROR);
             return {
                 ...state,
                 loading: false,
@@ -66,15 +95,17 @@ export default function urlReducer(state = initialState, action) {
         //         baseUrl: action.payload.url
         //     };
         case SET_CHECK_URL:
-            // console.log(action.payload.url);
+            console.log(SET_CHECK_URL);
             return {
                 ...state,
                 checkUrl: action.payload.url
             };
         case CLEAR_URLS:
+            console.log(CLEAR_URLS);
             return {
                 ...state,
-                urls: []
+                ...defaultState
+
             }; 
         case URLS_COUNT:
             console.log("urls count:", action.payload.count);

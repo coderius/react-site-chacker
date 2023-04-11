@@ -18,6 +18,7 @@ class Footer extends Component {
 
     render() {
         return (
+            <footer className="bg-dark text-center fixed-bottom text-light">
             <Container fluid>
                 <Row>
                     <Col>
@@ -27,6 +28,7 @@ class Footer extends Component {
                     </Col>
                 </Row>
             </Container>
+            </footer>
         )
     }
 }
