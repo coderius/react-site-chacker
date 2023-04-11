@@ -1,16 +1,25 @@
 import {
-    SET_URLS,
-    SET_URLS_STARTED,
+    SET_URL,
+    SET_URL_STARTED,
     SERVER_ERROR,
     // SET_BASE_URL,
     SET_CHECK_URL,
-    CLEAR_URLS
+    CLEAR_URLS,
+    START_POPULATE_URLS,
+    END_POPULATE_URLS,
+    URLS_COUNT
   } from '../actions/types';
 
+  import {
+    POPULATE_URLS_STARTING,
+    POPULATE_URLS_ENDING
+  } from '../actions/events';
 
   const initialState = {
     loading: false,
+    onPopulateUrls: false,
     urls: [],
+    urlsCount: 0,
     serverError: null,
     // baseUrl: "",//this url is used if isset relative links for ajax
     checkUrl: "",//this url pasted to input
@@ -19,12 +28,24 @@ import {
 
 export default function urlReducer(state = initialState, action) {
     switch (action.type) {
-        case SET_URLS_STARTED:
+        case SET_URL_STARTED:
             return {
                 ...state,
                 loading: true
             };
-        case SET_URLS:
+        case START_POPULATE_URLS:
+            console.log(POPULATE_URLS_STARTING);
+            return {
+                ...state,
+                onPopulateUrls: POPULATE_URLS_STARTING
+            }; 
+        case END_POPULATE_URLS:
+            console.log(POPULATE_URLS_ENDING);
+            return {
+                ...state,
+                onPopulateUrls: POPULATE_URLS_ENDING
+            };       
+        case SET_URL:
             // console.log(action.payload);
             return {
                 ...state,
@@ -54,7 +75,13 @@ export default function urlReducer(state = initialState, action) {
             return {
                 ...state,
                 urls: []
-            };        
+            }; 
+        case URLS_COUNT:
+            console.log("urls count:", action.payload.count);
+            return {
+                ...state,
+                urlsCount: action.payload.count
+            };           
         default:
             return state;
     }

@@ -13,11 +13,18 @@ import { connect } from 'react-redux';
 import {
     setCheckUrl,
     // setBaseUrl, 
-    setUrls,
+    setUrl,
     serverError,
-    clearUrls
+    clearUrls,
+    startPopulateUrls,
+    endPopulateUrls
 } from '../../store/actions/urlActions';
 import Alert from 'react-bootstrap/Alert';
+
+import {
+    POPULATE_URLS_STARTING,
+    POPULATE_URLS_ENDING
+  } from '../../store/actions/events';
 
 class PageLinkAnalyzer extends Component {
 
@@ -122,12 +129,14 @@ class PageLinkAnalyzer extends Component {
             } else {
                 const map = new Map(Object.entries(links));
                 this.props.clearUrls();
+                this.props.startPopulateUrls();
                 map.forEach((value, key, map) => {
                     let params = {
                         href: value.href
                     };
-                    this.props.setUrls(params);
+                    this.props.setUrl(params);
                 });
+                this.props.endPopulateUrls();
 
                 // this.props.setUrls(Array.from(links));
                 // console.log(Array.from(links));
@@ -153,7 +162,7 @@ class PageLinkAnalyzer extends Component {
     }
 
     render() {
-
+        // console.log(this.props.onPopulateUrlsStarted ,this.props.onPopulateUrlsEnded);
         // this.props.urlReduxState.urls.map((currentValue, index, arr) => ( console.log(currentValue) ));
         return (
 
@@ -195,7 +204,7 @@ class PageLinkAnalyzer extends Component {
                                 ?
                                 this.props.countUrls > 0 ?
                                     <>
-                                        <h5 className="mt-3">Result for url: <i>{this.props.urlReduxState.checkUrl}</i></h5>
+                                        <h5 className="mt-3">Faunded {this.props.countUrls} links in url: <i>{this.props.urlReduxState.checkUrl} </i></h5>
                                         <Table striped bordered hover size="sm" className="mt-3">
                                             <thead>
                                                 <tr>
@@ -216,7 +225,7 @@ class PageLinkAnalyzer extends Component {
                                             </tbody>
                                         </Table>
                                     </>
-                                    : this.props.urlReduxState.checkUrl.length > 0 ?
+                                    : this.props.onPopulateUrlsEnded ?
                                         <Alert variant='info'>
                                             Urls not found on this page: {this.props.urlReduxState.checkUrl}
                                         </Alert>
@@ -240,14 +249,16 @@ class PageLinkAnalyzer extends Component {
 const mapStateToProps = state => {
     return {
         urlReduxState: state.urlReducer,
-        countUrls: state.urlReducer.urls.length
+        countUrls: state.urlReducer.urlsCount,
+        onPopulateUrlsStarted: state.urlReducer.onPopulateUrls === POPULATE_URLS_STARTING,
+        onPopulateUrlsEnded: state.urlReducer.onPopulateUrls === POPULATE_URLS_ENDING,
     };
 }
 
 const mapDispatchToProps = dispatch => {
     return {
-        setUrls: urls => {
-            dispatch(setUrls(urls));
+        setUrl: url => {
+            dispatch(setUrl(url));
         },
         serverError: e => {
             dispatch(serverError(e));
@@ -263,6 +274,12 @@ const mapDispatchToProps = dispatch => {
         },
         clearUrls: () => {
             dispatch(clearUrls());
+        },
+        startPopulateUrls: () => {
+            dispatch(startPopulateUrls());
+        },
+        endPopulateUrls: () => {
+            dispatch(endPopulateUrls());
         },
     };
 };

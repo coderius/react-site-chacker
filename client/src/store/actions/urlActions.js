@@ -1,12 +1,19 @@
 import {
-  SET_URLS,
-  SET_URLS_STARTED,
+  SET_URL,
+  SET_URL_STARTED,
   SERVER_ERROR,
   // SET_BASE_URL,
   SET_CHECK_URL,
-  CLEAR_URLS
+  CLEAR_URLS,
+  START_POPULATE_URLS,
+  END_POPULATE_URLS,
+  URLS_COUNT
 } from './types';
 
+import {
+  POPULATE_URLS_STARTING,
+  POPULATE_URLS_ENDING
+} from './events';
 // import axios from 'axios';
 
 // export const setUrls = (url) => {
@@ -58,12 +65,12 @@ import {
 //   }
 // });
 
-export const setUrls = (params) => {
+export const setUrl = (params) => {
 
-  setUrlsStarted();
+  setUrlStarted();
 
   return {
-    type: SET_URLS,
+    type: SET_URL,
     payload: params
   };
 }
@@ -72,8 +79,8 @@ export const clearUrls = () => ({
   type: CLEAR_URLS
 });
 
-const setUrlsStarted = () => ({
-  type: SET_URLS_STARTED
+const setUrlStarted = () => ({
+  type: SET_URL_STARTED
 });
 
 export const serverError = error => ({
@@ -82,6 +89,36 @@ export const serverError = error => ({
     error
   }
 });
+
+export const startPopulateUrls = () => ({
+  type: START_POPULATE_URLS
+});
+
+const urlsCount = (count) => ({
+  type: URLS_COUNT,
+  payload: {
+    count
+  }
+});
+
+export const endPopulateUrls = () => {
+
+  return (dispatch, getState) => {
+    new Promise(function (myResolve, myReject) {
+      const u = () => ({
+        type: END_POPULATE_URLS
+      });
+      dispatch(u());
+      const state = getState();
+      myResolve(state);
+    })
+    .then(state => {
+      const urls = state.urlReducer.urls;
+      dispatch(urlsCount(urls.length));
+    });
+  }
+};
+
 
 
 /////////
