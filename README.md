@@ -18,3 +18,11 @@ Available options (in development)
 - Go to server folder
 - Run command npm start
 - Use app
+
+**Technologies used in app:**
+- React.js + redux
+- Node.js
+- Express.js
+- Websockets
+- ajax
+
