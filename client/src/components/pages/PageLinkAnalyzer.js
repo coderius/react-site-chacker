@@ -9,6 +9,15 @@ import Form from 'react-bootstrap/Form';
 import Breadcrumb from 'react-bootstrap/Breadcrumb';
 import Table from 'react-bootstrap/Table';
 import * as cheerio from 'cheerio';
+import { connect } from 'react-redux';
+import {
+    setCheckUrl,
+    // setBaseUrl, 
+    setUrls,
+    serverError,
+    clearUrls
+} from '../../store/actions/urlActions';
+import Alert from 'react-bootstrap/Alert';
 
 class PageLinkAnalyzer extends Component {
 
@@ -24,8 +33,8 @@ class PageLinkAnalyzer extends Component {
             formValid: false,//валтдна ли форма
             // validatedMessages: [],
             appId: "",
-            checkUrl: "",
-            websocketUrls: [],
+            // checkUrl: "",
+            // websocketUrls: [],
         };
     }
 
@@ -38,11 +47,17 @@ class PageLinkAnalyzer extends Component {
     //Input set number change hendler
     setCheckUrl() {
         const input = this.inputRef.current;
-        this.setState({
-            checkUrl: input.value
-        });
+        const url = input.value;
+
+        // var pathArray = url.split( '/' );
+        // var protocol = pathArray[0];
+        // var host = pathArray[2];
+        // var baseUrl = protocol + '//' + host;
+
+        this.props.setCheckUrlAction(url);
+        // this.props.setBaseUrlAction(baseUrl);//redux
         // input.value = null;
-        return input.value;
+        return url;
         // console.log(this.state.checkUrl);
     }
 
@@ -69,29 +84,6 @@ class PageLinkAnalyzer extends Component {
 
     }
 
-    getLinks(url) {
-        fetch(url)
-            .then(function (response) {
-                return response.text();
-            })
-            .then(function (html) {
-                // Load the HTML in Cheerio
-                const $ = cheerio.load(html);
-
-                // Select all anchor tags from the page
-                const links = $("a")
-
-                // Loop over all the anchor tags
-                links.each((index, value) => {
-                    // Print the text from the tags and the associated href
-                    console.log($(value).text(), " => ", $(value).attr("href"));
-                })
-            })
-            .catch(function (err) {
-                console.log('Failed to fetch page: ', err);
-            });
-    }
-
     //Start 
     handleSubmitCheck(e) {
         e.preventDefault();
@@ -99,35 +91,59 @@ class PageLinkAnalyzer extends Component {
         const form = e.currentTarget;
         let isVal = this.checkValidityForm(form);
         if (isVal === false) {
-            console.log("this.state.formValid === false", this.state.formValid);
+            // console.log("this.state.formValid === false", this.state.formValid);
             return;
         }
-
-        this.setCheckUrl();
-        // console.log("fds", this.state.checkUrl);
 
         this.ws = new WebSocket(SOCKET_SERVER_ENDPOINT);
 
         // const checkUrl = this.state.checkUrl;
         const checkUrl = this.setCheckUrl();
-
-
-        console.log("checkUrl", this.setCheckUrl());
+        // console.log("checkUrl", this.setCheckUrl());
         const appId = this.state.appId;
+
         this.ws.onopen = () => {
-            this.ws.send(JSON.stringify({ event: "check-url", payload: { appId, checkUrl } }));
+            this.ws.send(JSON.stringify({ event: "onCheckUrl", payload: { appId, checkUrl } }));
             console.log("Connection WebSocket Open!");
         };
 
         this.ws.onclose = () => {
-            alert("Подключение окончено");
+            console.log("Подключение окончено");
         };
 
         // conn.onmessage = e => setMessages([...messages,JSON.parse(e.data)])
         this.ws.onmessage = (event) => {
             let json = JSON.parse(event.data);
-            console.log(json.length);
-            console.log(json);
+            let links = json.result;
+            let error = json.error;
+            if (error !== undefined) {
+                this.props.serverError(error);
+                console.log(error);
+            } else {
+                const map = new Map(Object.entries(links));
+                this.props.clearUrls();
+                map.forEach((value, key, map) => {
+                    let params = {
+                        href: value.href
+                    };
+                    this.props.setUrls(params);
+                });
+
+                // this.props.setUrls(Array.from(links));
+                // console.log(Array.from(links));
+
+                // if(links.length > 0){
+
+                // const map = new Map(Object.entries(json));
+                // map.forEach((value, key, map) => {
+                //     // console.log(value.href);
+                //     this.props.checkUrlAction(value.href);
+                // });
+                // }
+            }
+
+            // console.log(json.length);
+            // console.log(json);
             this.ws.close();
         }
 
@@ -138,16 +154,12 @@ class PageLinkAnalyzer extends Component {
 
     render() {
 
-        // let validatedMessageBlock;
-        // if (this.state.validated === false) {
-        //     validatedMessageBlock = <div>{this.state.validatedMessages.map((m) => m)}</div>;
-        // }
-
+        // this.props.urlReduxState.urls.map((currentValue, index, arr) => ( console.log(currentValue) ));
         return (
 
             <Container fluid>
                 <Row>
-                    <Col><h1>Check website links</h1></Col>
+                    <Col><h1>Check links in webpage</h1></Col>
                 </Row>
 
                 <Row>
@@ -178,33 +190,44 @@ class PageLinkAnalyzer extends Component {
                 <hr></hr>
                 <Row>
                     <Col>
-                        <h5 className="mt-3">Result for url: <i>{this.state.checkUrl}</i></h5>
-                        <Table striped bordered hover size="sm" className="mt-3">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Url</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Mark</td>
-                                    <td>Otto</td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Jacob</td>
-                                    <td>Thornton</td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>Larry the Bird</td>
-                                    <td>@twitter</td>
-                                </tr>
-                            </tbody>
-                        </Table>
+                        {
+                            this.props.urlReduxState.serverError === null
+                                ?
+                                this.props.countUrls > 0 ?
+                                    <>
+                                        <h5 className="mt-3">Result for url: <i>{this.props.urlReduxState.checkUrl}</i></h5>
+                                        <Table striped bordered hover size="sm" className="mt-3">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Url</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {this.props.urlReduxState.urls.map((currentValue, index, arr) => (
+                                                    <tr key={index}>
+                                                        <td>{index + 1}</td>
+                                                        <td>"{currentValue.href}"</td>
+                                                        <td>status</td>
+                                                    </tr>
+                                                ))}
+
+                                            </tbody>
+                                        </Table>
+                                    </>
+                                    : this.props.urlReduxState.checkUrl.length > 0 ?
+                                        <Alert variant='info'>
+                                            Urls not found on this page: {this.props.urlReduxState.checkUrl}
+                                        </Alert>
+                                        : <></>
+
+                                :
+                                <Alert variant='danger'>
+                                    {this.props.urlReduxState.serverError}
+                                </Alert>
+
+                        }
                     </Col>
                 </Row>
 
@@ -214,5 +237,38 @@ class PageLinkAnalyzer extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        urlReduxState: state.urlReducer,
+        countUrls: state.urlReducer.urls.length
+    };
+}
 
-export default PageLinkAnalyzer;
+const mapDispatchToProps = dispatch => {
+    return {
+        setUrls: urls => {
+            dispatch(setUrls(urls));
+        },
+        serverError: e => {
+            dispatch(serverError(e));
+        },
+        // checkUrlAction: url => {
+        //     dispatch(checkUrl(url));
+        // },
+        // setBaseUrlAction: url => {
+        //     dispatch(setBaseUrl(url));
+        // }, 
+        setCheckUrlAction: url => {
+            dispatch(setCheckUrl(url));
+        },
+        clearUrls: () => {
+            dispatch(clearUrls());
+        },
+    };
+};
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(PageLinkAnalyzer);
+// export default PageLinkAnalyzer;

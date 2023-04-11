@@ -19,11 +19,11 @@ export class Crawler {
                     href: $(element).attr('href'), // get the href attribute
                 });
             });
-            return await Promise.resolve(links);
+            return Promise.resolve(links);
             // return links;
         } catch (error) {
             console.log(error);
-            throw new Error(error);
+            return Promise.reject(error.message);
         }
     }
 }

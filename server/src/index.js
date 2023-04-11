@@ -15,15 +15,15 @@ const dispatchEvent = (message, ws) => {
 
     //{ event: "check-url", payload: { appId, checkUrl }
     switch (json.event) {
-        case "check-url": 
+        case "onCheckUrl": 
             wss.clients.forEach(client => {
                 new Crawler(json.payload.checkUrl)
                 .find()
-                .then(
-                    links => {
-                        client.send(JSON.stringify(links));
-                    }
-                );
+                .then(links => {
+                    client.send(JSON.stringify({result: links}));
+                }).catch(error => {
+                    client.send(JSON.stringify({error}));
+                });
             });
         break;
         default: ws.send((new Error("Wrong query")).message);
