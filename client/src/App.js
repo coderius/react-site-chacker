@@ -13,7 +13,7 @@ import WebsiteLinkAnalyzer from './components/pages/WebsiteLinkAnalyzer';
 function App() {
   return (
     <div className="App">
-      <Container fluid>
+      <Container>
         <Header />
 
         <Breadcrumb>

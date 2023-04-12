@@ -196,7 +196,7 @@ class PageLinkAnalyzer extends Component {
         // this.props.urlReduxState.urls.map((currentValue, index, arr) => ( console.log(currentValue) ));
         return (
 
-            <Container fluid>
+            <>
                 <Row>
                     <Col><h1>Check links in webpage</h1></Col>
                 </Row>
@@ -220,7 +220,7 @@ class PageLinkAnalyzer extends Component {
                                     Ok.
                                 </Form.Control.Feedback>
                             </Form.Group>
-                            <Button variant="primary" type="submit">
+                            <Button variant={this.props.loading ? "warning" : "primary"} type="submit">
                                 {
                                     this.props.loading ?
                                         <><Spinner
@@ -230,8 +230,8 @@ class PageLinkAnalyzer extends Component {
                                             role="status"
                                             aria-hidden="true"
                                         />
-                                            <span> Loading...</span></>
-                                        :
+                                        <span> Loading...</span></>
+                                    :
                                         <span> Check</span>
                                 }
 
@@ -289,7 +289,7 @@ class PageLinkAnalyzer extends Component {
                 </Row>
 
 
-            </Container>
+            </>
         )
     }
 }

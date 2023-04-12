@@ -3,19 +3,19 @@ import axios from 'axios';
 
 export class Crawler {
 
-    constructor(baseUrl) {
-        this.baseUrl = baseUrl;
+    constructor(crawledUrl) {
+        this.crawledUrl = crawledUrl;
     }
 
     async find() {
         try {
-            const { data } = await axios.get(this.baseUrl);
+            const { data } = await axios.get(this.crawledUrl);
             const $ = cheerio.load(data);
             const linkObjects = $('a');
             const links = [];
             linkObjects.each((index, element) => {
                 links.push({
-                    //text: $(element).text(), // get the text
+                    text: $(element).text(), // get the text
                     href: $(element).attr('href'), // get the href attribute
                 });
             });
