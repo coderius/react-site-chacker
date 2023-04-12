@@ -48,7 +48,7 @@ export default function urlReducer(state = initialState, action) {
                 // loading: true
             };
         case SET_URL:
-            console.log(SET_URL, state.loading);
+            console.log(SET_URL, action.payload.params);
             return {
                 ...state,
                 urls: [...state.urls, action.payload.params]

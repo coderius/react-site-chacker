@@ -137,7 +137,10 @@ class PageLinkAnalyzer extends Component {
                     new Promise(function (resolve, reject) {
                         map.forEach((value, key, map) => {
                             let params = {
-                                href: value.href
+                                ...value,
+                                // html: value.html,
+                                // href: value.href,
+                                // text:  value.text,
                             };
                             props.pushUrl(params);
                         });
@@ -146,6 +149,10 @@ class PageLinkAnalyzer extends Component {
                     })
                         .then(() => {
                             props.endPopulateUrls();
+                        })
+                        .catch((e) => {
+                            // console.log(e.message);
+                            this.props.serverError(e.message);
                         });
                 }
 
